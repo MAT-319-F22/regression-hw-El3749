@@ -1,0 +1,178 @@
+---
+title: "Regression HW"
+format: pdf
+---
+
+## Introduction
+
+In this homework, you'll get a chance to practice the linear regression skills you learned in class on some real-world data! This data was taken from an online data science competition called SLICED! SLICED is like the cooking competition CHOPPED, but for data science. The dataset in question contains metadata about Super Store sales of different products as well as the profit made. Here is a data dictionary:
+
+Variable | Description
+---------|------------
+id | unique id per row
+ship_mode  | what mode was used to ship the item: 'First Class', 'Same Day', 'Second Class', 'Standard Class'
+segment | whether the recipient is corporate or consumer
+country | always United States
+city | where the item was shipped (a city in the United States)
+state | where the item was shipped (a state in the United States)
+postal_code | ZIP Code in the United States
+region  | region in the United States: 'Central', 'East', 'South', 'West'
+category | type of item: 'Furniture', 'Office Supplies', 'Technology'
+sub_category |  sub-type of item: 'Accessories', 'Appliances', 'Art', 'Binders', 'Bookcases', 'Chairs', 'Copiers', 'Envelopes', 'Fasteners', 'Furnishings', 'Labels', 'Machines', 'Paper', 'Phones', 'Storage', 'Supplies', 'Tables'
+sales | sales made for the order (USD)
+quantity | quantity sold of the item
+discount | discount applied to the order(from 0 to 1)
+profit | profit made on the order (USD)
+
+
+
+
+## Getting started
+
+Here are the steps for getting started:
+
+- Start with the assignment link that creates a repo on GitHub with starter documents. I have sent this to you through email.
+- Clone this repo in RStudio
+- Make any changes needed as outlined by the tasks you need to complete for the assignment
+- Periodically commit changes (the more often the better, for example, once per each new task)
+    + Remember, git will yell at you when you try to commit before running the following lines in the terminal
+        - `git config --global user.name "Your Name Here"`
+        - `git config --global user.email "Your Email Here"`
+- Push all your changes back to your GitHub repo
+
+and voila, you're done! Once you push your changes back you do not need to do anything else to "submit" your work. And you can of course push multiple times throughout the assignment. At the time of the deadline I will take whatever is in your repo and consider it your final submission, and grade the state of your work at that time (which means even if you made mistakes before then, you wouldn't be penalized for them as long as the final state of your work is correct).
+
+
+## Assignment
+
+The first thing that we'll need to do is setup our R/RStudio session so that we can do our data analysis and perform linear regression. This involves loading the packages we'll need for the project. I've loaded the correct packages below. Remember to install the packages with `install.packages()` before you load them (you only have to install once, but load when starting a new session). I've added an option to the chunk below called `message: FALSE` to turn off all the messages given when loading the two packages.
+
+```{r}
+#| message: false
+
+library("tidyverse");theme_set(theme_bw())
+library("tidymodels");theme_set(theme_bw())
+```
+
+
+Now we need to load the data into R! There are two datasets in the project space, `super_stores_sales_train.csv` and `super_stores_sales_test.csv`. We don't fully know about the concept of training and testing datasets yet, but I want you to load them into R with the `read_csv()` function and call them `train` and `test` respectively. Do that below now!
+
+```{r}
+#| message: false
+
+# load train
+
+# load test
+
+```
+
+IMPORTANT: From now on, assume you are working with the `train` dataset unless explicitly told to use `test`.
+
+
+The next step in your data analysis should always be to make sure that your data was parsed correctly by the loading function. This can mean making sure that numbers are parsed as numbers, words as characters, TRUE's and FALSE's as logicals. For this assignment, you can trust that everything works out right when loading the data. 
+
+Before we begin to perform linear regression, we need to understand the goal of the analysis and do some exploratory data analysis (EDA) to understand how the data is behaving. In the SLICED competition, the goal was to predict profit based on any of the metadata on the sales. For this assignment, we will focus on both prediction and inference with profit being the response variable and everything else as possible predictors. 
+
+When engaging in EDA your goal is to extract information that will inform your modeling choices down the road. For linear regression, and really any other "learning" method, we are looking for predictors that are correlated to the response. That should be what we focus on finding out during this EDA. 
+
+### EDA
+
+It is important to understand how the response behaves and so I want you to make a histogram of `profit`. By default, it will show you one very large bar at 0 because of some outliers. Zoom in on the picture by manually setting the x-axis limits to -100 to 500 using the `xlim()` function. Comment on the plot and if anything surprises you.
+
+```{r}
+# plot
+
+```
+
+Comments:
+
+
+Now we are interested in seeing if we can determine if any variables or combination of variables are correlated with the response. Let's start with some categorical variables `ship_mode` and `segment`. First, I want you to find the mean profit amount for each mode of shipping using `group_by()` and `summarize()`. Next, I want you to make histograms of `profit` that are faceted by `ship_mode`. In addition to regular ggplotting functions, you'll want to use `facet_wrap()` to do the faceting. Also, remember to use `vars()` instead of `aes()` inside `facet_wrap()`. You'll probably want to limit the x-axis scale with `xlim()` like you did previously. Comment on any possible correlation between the variables. 
+
+```{r}
+# mean profit for every ship mode 
+
+
+# plot
+
+```
+
+Comments:
+
+What about `ship_mode` and `segment` together? Find the mean profit for each `ship_mode` and `segment` pair. You'll need to use `group_by()` and `summarize()` again. Any correlation?
+
+```{r}
+# mean profit faceted on both variables
+
+```
+
+Comments:
+
+
+There are a number of different categorical variables that correspond to location in some sense (`country`, `state`, `city`, `region`, and `zip code`). Certainly they all convey similar information. The question becomes how fine a mesh do we need to capture the variation in over location without overfitting. An important fact to know is that the holdout samples (the data in the test dataset) are certain states. Discuss why it would be unwise to use `state`, or anything finer than `state`, as a predictor in the model. Also, discuss why `id` and `country` are bad predictors as well.
+
+Comments:
+
+
+
+Now we'll explore the `category` and `sub_category` variables! Again use `group_by()` and `summarize()` to show the mean profit and sample size (which you can find using the `n()` function) for each combination of category and sub-category. Then comment on your findings. 
+
+```{r}
+# summary for combinations of category and sub_category
+
+
+```
+
+Comments:
+
+
+Finally lets look at the quantitative predictors! I would like you to find and comment on the following:
+
+  * Scatterplot of `sales` vs. `profit`
+  * Correlation between `sales` and `profit` using `cor()`
+  * Correlation between `quantity` and `profit`
+  * Correlation between `discount` and `profit`
+  * Scatterplot of `sales / quantity` and `profit`
+  
+```{r}
+
+```
+ 
+Comments:
+
+
+
+### Modeling
+
+Let's start with just a simple model using `sales` as the predictor and `profit` as the response. Make the model, look at the summary, and comment on the usefulness of the model. Make sure to check the assumptions of simple linear regression!
+
+```{r}
+
+```
+
+Comments:
+
+
+Now let's try `sales / quantity` instead of sales. To do this, you are going to have to use a special syntax in the formula. Instead of writing `profit ~ sales / quantity` you need to write `profit ~ I(sales / quantity)`. The `I()` function tells the formula to treat whatever is inside it as literal. The division sign has a special meaning inside the formula syntax without the `I()`. Comment on the quality of fit and compare it to the previous one. Make sure to also look at the assumptions when comparing the two. 
+
+```{r}
+
+```
+
+Comments:
+
+
+Let's try to improve on our fit by adding in more variables that we saw were important from our EDA. I want you to include `sales`, `quantity`, `discount`, the interaction between `category` and `subcategory`, and the interaction between `ship_mode` and `segment`. To convey interactions between variables, you use the colon operator. For example, `ship_mode:segment` conveys the interaction between variables. Comment on the fit and compare to the other fits
+
+```{r}
+
+```
+
+Comments:
+
+
+Now we are going to use a simpler model to predict on the test set. Use a model that employs `sales`, `quantity`, and `discount` as the predictors. Fit the model and then use the `predict()` function to predict new values on the test set. Unfortunately, we don't know the truth, so we can't compare our predictions. 
+
+```{r}
+
+```
