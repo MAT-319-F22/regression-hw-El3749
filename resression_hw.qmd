@@ -135,11 +135,14 @@ Now we'll explore the `category` and `sub_category` variables! Again use `group_
 
 ```{r}
 # summary for combinations of category and sub_category
+categories <- train %>%
+    group_by(category, sub_category) %>%
+    summarise(meanProfit = mean(profit), sampleSize = n())
+categories
 
-train
 ```
 
-Comments:
+Comments: Tables lose a lot of money, maybe because their size makes distribution difficult, and to some extnt a smaller sample size than some categories. Copiers seem to make a ton of money, which despite their cost seems like a larger profit margin that I wouldve expected
 
 
 Finally lets look at the quantitative predictors! I would like you to find and comment on the following:
@@ -151,11 +154,20 @@ Finally lets look at the quantitative predictors! I would like you to find and c
   * Scatterplot of `sales / quantity` and `profit`
   
 ```{r}
+ggplot(train, aes(x=sales, y=profit)) + geom_point()
 
+cor(train$sales, train$profit)
+cor(train$quantity, train$profit)
+cor(train$discount, train$profit)
+ggplot(train, aes(x=sales/quantity, y=profit)) + geom_point()
 ```
  
 Comments:
-
+1) There is greater variance between data points at the far end of sales and profit. 
+2) There is a moderate correlation between sales and profit
+3) There is no meaningful relationship between quantity and profit
+4) There is a negligible negative correlation between discount and profit
+5) There does appear to be correlation in this plot, even as sales/quantity approaches high/outlier values
 
 
 ### Modeling
@@ -163,32 +175,42 @@ Comments:
 Let's start with just a simple model using `sales` as the predictor and `profit` as the response. Make the model, look at the summary, and comment on the usefulness of the model. Make sure to check the assumptions of simple linear regression!
 
 ```{r}
-
+fit <- lm(profit ~ sales, data = train)
+fit
+summary(fit)
 ```
 
-Comments:
+Comments: The model estimates that about $0.23 of profit is made for every $1 of sales. The P value of 2.2e-16 indicates there is a strong relationship between these variables, but an r-squared of .39 indicates we should see significant variance along the way.
 
 
 Now let's try `sales / quantity` instead of sales. To do this, you are going to have to use a special syntax in the formula. Instead of writing `profit ~ sales / quantity` you need to write `profit ~ I(sales / quantity)`. The `I()` function tells the formula to treat whatever is inside it as literal. The division sign has a special meaning inside the formula syntax without the `I()`. Comment on the quality of fit and compare it to the previous one. Make sure to also look at the assumptions when comparing the two. 
 
 ```{r}
-
+fit2 <- lm(profit ~ I(sales/quantity), data = train)
+fit2
+summary(fit2)
 ```
 
-Comments:
+Comments: The model estimates that about 92 cents of profit are gained for every 1 point move of sales/quantity. With an r-squared of .34, there is significant variance along the trendline, but the p-value of 2.2e-16 shows us there is a correlation here.
 
 
 Let's try to improve on our fit by adding in more variables that we saw were important from our EDA. I want you to include `sales`, `quantity`, `discount`, the interaction between `category` and `subcategory`, and the interaction between `ship_mode` and `segment`. To convey interactions between variables, you use the colon operator. For example, `ship_mode:segment` conveys the interaction between variables. Comment on the fit and compare to the other fits
 
 ```{r}
-
+fit3 <- lm(profit ~ sales + quantity + discount + category:sub_category + ship_mode:segment, data = train)
+fit3
+summary(fit3)
+plot(fit3)
 ```
 
-Comments:
+Comments: In the interaction between ship_mode and segment, we see only one statistically significant grouping. These are the only outliers, as the rest appear to correlate strongly. The multiple r-squared of .48 isn't too great here, especially because we are working with multiple variables which should push the number up. It's also interesting that quantity negatively impacts profit so much.
 
 
 Now we are going to use a simpler model to predict on the test set. Use a model that employs `sales`, `quantity`, and `discount` as the predictors. Fit the model and then use the `predict()` function to predict new values on the test set. Unfortunately, we don't know the truth, so we can't compare our predictions. 
 
 ```{r}
-
+fit4 <- lm(profit ~ sales + quantity + discount, data = train)
+fit4
+summary(fit4)
+predict(fit4, data.frame(sales = 1000, quantity = 10, discount = .2))
 ```
