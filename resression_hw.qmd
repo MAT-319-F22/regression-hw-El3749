@@ -213,4 +213,5 @@ fit4 <- lm(profit ~ sales + quantity + discount, data = train)
 fit4
 summary(fit4)
 predict(fit4, data.frame(sales = 1000, quantity = 10, discount = .2))
+predict(fit4, data.frame(sales = 500, quantity = 1, discount = .1))
 ```
